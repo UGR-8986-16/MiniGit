@@ -14,9 +14,16 @@ int main() {
 
         if (command == "init") {
             mg.init();
-        } else if (command == "exit") {
+        } 
+        else if (command == "exit") {
             break;
-        } else {
+        } 
+        else if (command == "add") {
+            std::string filename;
+            std::cin >> filename;
+            mg.add(filename);
+        }
+        else {
             std::cout << "Unknown command. Try 'init' or 'exit'.\n";
         }
     }
