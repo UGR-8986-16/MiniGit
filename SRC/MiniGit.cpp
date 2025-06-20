@@ -254,7 +254,7 @@ void MiniGitSystem::merge(const std::string &branchName)
 
     if (targetHash.empty())
     {
-        std::cout << "⚠️ Branch has no commits.\n";
+        std::cout << "Branch has no commits.\n";
         return;
     }
 
