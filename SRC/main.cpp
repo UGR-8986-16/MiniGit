@@ -48,6 +48,10 @@ int main() {
                 std::cout << "Usage: commit -m \"your message\"\n";
             }
         } 
+        else if (command == "log") {
+             mg.log();
+        }
+
         else {
             std::cout << "Unknown command. Try 'init', 'add <file>', 'commit -m \"msg\"', or 'exit'.\n";
         }

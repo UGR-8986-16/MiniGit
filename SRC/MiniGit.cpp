@@ -41,6 +41,22 @@ void MiniGitSystem::init() {
 
     std::cout << "MiniGit repository initialized.\n";
 }
+
+void MiniGitSystem::log() const {
+    if (!head) {
+        std::cout << "No commits yet.\n";
+        return;
+    }
+
+    const Commit* current = head;
+    while (current) {
+        std::cout << "Commit: " << current->hash << '\n';
+        std::cout << "Date:   " << current->timestamp << '\n';
+        std::cout << "Message: " << current->message << "\n\n";
+        current = current->parent;
+    }
+}
+
 std::string MiniGitSystem::hashFile(const std::string& filename) {
     std::ifstream in(filename);
     if (!in.is_open()) return "";
