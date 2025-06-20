@@ -198,3 +198,42 @@ void MiniGitSystem::branch(const std::string &branchName)
         std::cout << "Failed to create branch file.\n";
     }
 }
+void MiniGitSystem::checkout(const std::string &branchName)
+{
+    std::string branchPath = referencesDir + "/" + branchName;
+
+    if (!std::filesystem::exists(branchPath))
+    {
+        std::cout << "Branch '" << branchName << "' does not exist.\n";
+        return;
+    }
+
+    std::ifstream in(branchPath);
+    std::string targetHash;
+    std::getline(in, targetHash);
+    in.close();
+
+    if (targetHash.empty())
+    {
+        std::cout << "Branch is empty (no commits yet). HEAD updated.\n";
+        head = nullptr;
+        writeHEAD("references/" + branchName);
+        return;
+    }
+
+    Commit *current = head;
+    while (current != nullptr && current->hash != targetHash)
+    {
+        current = current->parent;
+    }
+
+    if (current == nullptr)
+    {
+        std::cout << "Commit not found in current history. You may need to rebuild full commit tree in future.\n";
+        return;
+    }
+
+    head = current;
+    writeHEAD("references/" + branchName);
+    std::cout << "Checked out branch '" << branchName << "' (commit: " << targetHash << ")\n";
+}
