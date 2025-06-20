@@ -77,6 +77,18 @@ int main()
                 std::cout << "Usage: branch <branch-name>\n";
             }
         }
+        else if (command == "checkout")
+        {
+            std::string branchName;
+            std::cin >> branchName;
+            mg.checkout(branchName);
+        }
+        else if (command == "merge")
+        {
+            std::string branchName;
+            std::cin >> branchName;
+            mg.merge(branchName);
+        }
 
         else
         {
