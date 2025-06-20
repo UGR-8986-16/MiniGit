@@ -97,6 +97,9 @@ void MiniGitSystem::add(const std::string& filename) {
     std::cout << "Staged " << filename << " with hash " << hash << '\n';
 }
 
+
+
+
 std::string MiniGitSystem::getCurrentTime() {
     std::time_t now = std::time(nullptr);
     char buf[64];
@@ -145,4 +148,29 @@ void MiniGitSystem::commit(const std::string& message) {
     stagingArea.clear();
 
     std::cout << " Commit created: " << commitHash << '\n';
+}
+
+void MiniGitSystem::branch(const std::string& branchName) {
+    if (!head) {
+        std::cout << "No commits yet. You must commit before creating a branch.\n";
+        return;
+    }
+
+    std::string path = referencesDir + "/" + branchName;
+
+    // Check if the branch already exists
+    if (std::filesystem::exists(path)) {
+        std::cout << "Branch '" << branchName << "' already exists.\n";
+        return;
+    }
+
+    // Create a file for the new branch and point it to the current commit
+    std::ofstream out(path);
+    if (out.is_open()) {
+        out << head->hash;
+        out.close();
+        std::cout << "Branch '" << branchName << "' created at commit " << head->hash << "\n";
+    } else {
+        std::cout << "Failed to create branch file.\n";
+    }
 }

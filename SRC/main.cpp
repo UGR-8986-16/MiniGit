@@ -51,6 +51,16 @@ int main() {
         else if (command == "log") {
              mg.log();
         }
+        else if (command == "branch") {
+            std::string branchName;
+            iss >> branchName;
+            if (!branchName.empty()) {
+               mg.branch(branchName);
+            } else {
+           std::cout << "Usage: branch <branch-name>\n";
+    }
+}
+
 
         else {
             std::cout << "Unknown command. Try 'init', 'add <file>', 'commit -m \"msg\"', or 'exit'.\n";

@@ -27,6 +27,8 @@ class MiniGitSystem {
         void add(const std::string& filename);
         void commit(const std::string& message);
         void log() const;
+        void branch(const std::string& branchName);
+
 
     private:
         std::string minigitDir = ".minigit";
