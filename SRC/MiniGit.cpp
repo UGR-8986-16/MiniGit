@@ -7,32 +7,39 @@
 
 namespace fs = std::filesystem;
 
-MiniGitSystem::MiniGitSystem() {
+MiniGitSystem::MiniGitSystem()
+{
     // Constructor placeholder
 }
 
-void MiniGitSystem::createDirectory(const std::string& path) {
-    if (!fs::exists(path)) {
+void MiniGitSystem::createDirectory(const std::string &path)
+{
+    if (!fs::exists(path))
+    {
         fs::create_directory(path);
         std::cout << "Created: " << path << '\n';
     }
 }
 
-void MiniGitSystem::writeHEAD(const std::string& branch) {
+void MiniGitSystem::writeHEAD(const std::string &branch)
+{
     std::ofstream headFile(".minigit/HEAD");
-    if (headFile.is_open()) {
+    if (headFile.is_open())
+    {
         headFile << "ref: " << branch;
         headFile.close();
     }
 }
 
-void MiniGitSystem::init() {
+void MiniGitSystem::init()
+{
     createDirectory(minigitDir);
     createDirectory(objectsDir);
     createDirectory(referencesDir);
 
     std::ofstream masterFile(referencesDir + "/master");
-    if (masterFile.is_open()) {
+    if (masterFile.is_open())
+    {
         masterFile << ""; // No commit yet
         masterFile.close();
     }
@@ -42,14 +49,17 @@ void MiniGitSystem::init() {
     std::cout << "MiniGit repository initialized.\n";
 }
 
-void MiniGitSystem::log() const {
-    if (!head) {
+void MiniGitSystem::log() const
+{
+    if (!head)
+    {
         std::cout << "No commits yet.\n";
         return;
     }
 
-    const Commit* current = head;
-    while (current) {
+    const Commit *current = head;
+    while (current)
+    {
         std::cout << "Commit: " << current->hash << '\n';
         std::cout << "Date:   " << current->timestamp << '\n';
         std::cout << "Message: " << current->message << "\n\n";
@@ -57,9 +67,11 @@ void MiniGitSystem::log() const {
     }
 }
 
-std::string MiniGitSystem::hashFile(const std::string& filename) {
+std::string MiniGitSystem::hashFile(const std::string &filename)
+{
     std::ifstream in(filename);
-    if (!in.is_open()) return "";
+    if (!in.is_open())
+        return "";
 
     std::stringstream buffer;
     buffer << in.rdbuf();
@@ -69,18 +81,22 @@ std::string MiniGitSystem::hashFile(const std::string& filename) {
     std::hash<std::string> hasher;
     return std::to_string(hasher(content));
 }
-void MiniGitSystem::writeBlob(const std::string& hash, const std::string& content) {
+void MiniGitSystem::writeBlob(const std::string &hash, const std::string &content)
+{
     std::string path = objectsDir + "/" + hash;
 
-    if (!std::filesystem::exists(path)) {
+    if (!std::filesystem::exists(path))
+    {
         std::ofstream out(path);
         out << content;
         out.close();
     }
 }
-void MiniGitSystem::add(const std::string& filename) {
+void MiniGitSystem::add(const std::string &filename)
+{
     std::ifstream in(filename);
-    if (!in.is_open()) {
+    if (!in.is_open())
+    {
         std::cout << "File not found: " << filename << '\n';
         return;
     }
@@ -97,23 +113,24 @@ void MiniGitSystem::add(const std::string& filename) {
     std::cout << "Staged " << filename << " with hash " << hash << '\n';
 }
 
-
-
-
-std::string MiniGitSystem::getCurrentTime() {
+std::string MiniGitSystem::getCurrentTime()
+{
     std::time_t now = std::time(nullptr);
     char buf[64];
     std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
     return std::string(buf);
 }
 
-std::string MiniGitSystem::generateCommitHash(const std::string& message, const std::string& time) {
+std::string MiniGitSystem::generateCommitHash(const std::string &message, const std::string &time)
+{
     std::hash<std::string> hasher;
     return std::to_string(hasher(message + time));
 }
 
-void MiniGitSystem::commit(const std::string& message) {
-    if (stagingArea.empty()) {
+void MiniGitSystem::commit(const std::string &message)
+{
+    if (stagingArea.empty())
+    {
         std::cout << "Nothing to commit.\n";
         return;
     }
@@ -121,13 +138,14 @@ void MiniGitSystem::commit(const std::string& message) {
     std::string time = getCurrentTime();
     std::string commitHash = generateCommitHash(message, time);
 
-    Commit* newCommit = new Commit;
+    Commit *newCommit = new Commit;
     newCommit->message = message;
     newCommit->timestamp = time;
     newCommit->hash = commitHash;
     newCommit->parent = head;
 
-    for (const auto& filename : stagingArea) {
+    for (const auto &filename : stagingArea)
+    {
         Blob blob;
         blob.filename = filename;
         blob.hash = hashFile(filename);
@@ -140,7 +158,8 @@ void MiniGitSystem::commit(const std::string& message) {
     out << "commit: " << commitHash << "\n";
     out << "date: " << time << "\n";
     out << "message: " << message << "\n";
-    for (const auto& blob : newCommit->blobs) {
+    for (const auto &blob : newCommit->blobs)
+    {
         out << "file: " << blob.filename << " hash: " << blob.hash << "\n";
     }
     out.close();
@@ -150,8 +169,10 @@ void MiniGitSystem::commit(const std::string& message) {
     std::cout << " Commit created: " << commitHash << '\n';
 }
 
-void MiniGitSystem::branch(const std::string& branchName) {
-    if (!head) {
+void MiniGitSystem::branch(const std::string &branchName)
+{
+    if (!head)
+    {
         std::cout << "No commits yet. You must commit before creating a branch.\n";
         return;
     }
@@ -159,18 +180,22 @@ void MiniGitSystem::branch(const std::string& branchName) {
     std::string path = referencesDir + "/" + branchName;
 
     // Check if the branch already exists
-    if (std::filesystem::exists(path)) {
+    if (std::filesystem::exists(path))
+    {
         std::cout << "Branch '" << branchName << "' already exists.\n";
         return;
     }
 
     // Create a file for the new branch and point it to the current commit
     std::ofstream out(path);
-    if (out.is_open()) {
+    if (out.is_open())
+    {
         out << head->hash;
         out.close();
         std::cout << "Branch '" << branchName << "' created at commit " << head->hash << "\n";
-    } else {
+    }
+    else
+    {
         std::cout << "Failed to create branch file.\n";
     }
 }
