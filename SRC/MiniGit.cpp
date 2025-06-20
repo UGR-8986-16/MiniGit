@@ -349,3 +349,78 @@ void MiniGitSystem::merge(const std::string &branchName)
         std::cout << "Target commit already in current history.\n";
     }
 }
+void MiniGitSystem::diff(const std::string &filename)
+{
+    if (!head)
+    {
+        std::cout << "No commits yet.\n";
+        return;
+    }
+
+    std::string oldHash;
+    for (const auto &blob : head->blobs)
+    {
+        if (blob.filename == filename)
+        {
+            oldHash = blob.hash;
+            break;
+        }
+    }
+
+    if (oldHash.empty())
+    {
+        std::cout << "File not tracked in last commit.\n";
+        return;
+    }
+
+    std::ifstream oldFile(objectsDir + "/" + oldHash);
+    std::ifstream newFile(filename);
+
+    if (!oldFile || !newFile)
+    {
+        std::cout << "Could not open files for comparison.\n";
+        return;
+    }
+
+    std::string oldLine, newLine;
+    int lineNum = 1;
+    bool changes = false;
+
+    std::cout << "\n Diff for " << filename << ":\n";
+
+    while (std::getline(oldFile, oldLine) && std::getline(newFile, newLine))
+    {
+        if (oldLine != newLine)
+        {
+            std::cout << "Line " << lineNum << " changed:\n";
+            std::cout << "  - committed: " << oldLine << "\n";
+            std::cout << "  + current:   " << newLine << "\n";
+            changes = true;
+        }
+        lineNum++;
+    }
+
+    while (std::getline(oldFile, oldLine))
+    {
+        std::cout << "Line " << lineNum << " removed:\n";
+        std::cout << "  - committed: " << oldLine << "\n";
+        lineNum++;
+        changes = true;
+    }
+
+    while (std::getline(newFile, newLine))
+    {
+        std::cout << "Line " << lineNum << " added:\n";
+        std::cout << "  + current:   " << newLine << "\n";
+        lineNum++;
+        changes = true;
+    }
+
+    if (!changes)
+    {
+        std::cout << "✅ No differences.\n";
+    }
+
+    oldFile.close();
+    newFile.close();
+}

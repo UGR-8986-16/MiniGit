@@ -33,6 +33,7 @@ public:
     void branch(const std::string &branchName);
     void checkout(const std::string &branchName);
     void merge(const std::string &branchName);
+    void diff(const std::string &filename);
 
 private:
     std::string minigitDir = ".minigit";

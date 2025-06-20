@@ -89,6 +89,12 @@ int main()
             std::cin >> branchName;
             mg.merge(branchName);
         }
+        else if (command == "diff")
+        {
+            std::string filename;
+            std::cin >> filename;
+            mg.diff(filename);
+        }
 
         else
         {
