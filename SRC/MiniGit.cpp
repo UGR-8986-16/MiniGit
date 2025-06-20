@@ -186,7 +186,6 @@ void MiniGitSystem::branch(const std::string &branchName)
         return;
     }
 
-    // Create a file for the new branch and point it to the current commit
     std::ofstream out(path);
     if (out.is_open())
     {
