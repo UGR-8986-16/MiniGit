@@ -237,3 +237,115 @@ void MiniGitSystem::checkout(const std::string &branchName)
     writeHEAD("references/" + branchName);
     std::cout << "Checked out branch '" << branchName << "' (commit: " << targetHash << ")\n";
 }
+void MiniGitSystem::merge(const std::string &branchName)
+{
+    std::string branchPath = referencesDir + "/" + branchName;
+
+    if (!std::filesystem::exists(branchPath))
+    {
+        std::cout << "Branch '" << branchName << "' does not exist.\n";
+        return;
+    }
+
+    std::ifstream in(branchPath);
+    std::string targetHash;
+    std::getline(in, targetHash);
+    in.close();
+
+    if (targetHash.empty())
+    {
+        std::cout << "⚠️ Branch has no commits.\n";
+        return;
+    }
+
+    Commit *current = head;
+    Commit *targetCommit = nullptr;
+
+    while (current != nullptr)
+    {
+        if (current->hash == targetHash)
+        {
+            std::cout << "Already up to date with '" << branchName << "'.\n";
+            return;
+        }
+        current = current->parent;
+    }
+
+    current = head;
+
+    Commit *scan = head;
+    while (scan != nullptr)
+    {
+        if (scan->hash == targetHash)
+        {
+            targetCommit = scan;
+            break;
+        }
+        scan = scan->parent;
+    }
+
+    if (targetCommit == nullptr)
+    {
+        std::cout << "Merging in commit " << targetHash << " from branch '" << branchName << "'...\n";
+
+        Commit *newCommit = new Commit;
+        newCommit->parent = head;
+        newCommit->message = "Merge from branch " + branchName;
+        newCommit->timestamp = getCurrentTime();
+        newCommit->hash = generateCommitHash(newCommit->message, newCommit->timestamp);
+
+        if (head)
+        {
+            for (const auto &b : head->blobs)
+            {
+                newCommit->blobs.push_back(b);
+            }
+        }
+
+        std::ifstream inCommit(".minigit/commit_" + targetHash + ".txt");
+        std::string line;
+        while (std::getline(inCommit, line))
+        {
+            if (line.rfind("file: ", 0) == 0)
+            {
+                std::istringstream iss(line);
+                std::string label, filename, hashLabel, filehash;
+                iss >> label >> filename >> hashLabel >> filehash;
+
+                bool alreadyExists = false;
+                for (const auto &b : newCommit->blobs)
+                {
+                    if (b.filename == filename && b.hash == filehash)
+                    {
+                        alreadyExists = true;
+                        break;
+                    }
+                }
+
+                if (!alreadyExists)
+                {
+                    newCommit->blobs.push_back({filename, filehash});
+                }
+            }
+        }
+        inCommit.close();
+
+        // Save merged commit
+        std::ofstream out(".minigit/commit_" + newCommit->hash + ".txt");
+        out << "commit: " << newCommit->hash << "\n";
+        out << "date: " << newCommit->timestamp << "\n";
+        out << "message: " << newCommit->message << "\n";
+        for (const auto &blob : newCommit->blobs)
+        {
+            out << "file: " << blob.filename << " hash: " << blob.hash << "\n";
+        }
+        out.close();
+
+        head = newCommit;
+        std::cout << "Merge commit created: " << newCommit->hash << "\n";
+    }
+    else
+    {
+        std::cout << "Target commit already in current history.\n";
+    }
+}

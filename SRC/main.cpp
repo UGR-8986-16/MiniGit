@@ -83,6 +83,12 @@ int main()
             std::cin >> branchName;
             mg.checkout(branchName);
         }
+        else if (command == "merge")
+        {
+            std::string branchName;
+            std::cin >> branchName;
+            mg.merge(branchName);
+        }
 
         else
         {
