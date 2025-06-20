@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <sstream>
+#include <chrono>
 
 namespace fs = std::filesystem;
 
@@ -78,4 +79,54 @@ void MiniGitSystem::add(const std::string& filename) {
 
     stagingArea.insert(filename);
     std::cout << "Staged " << filename << " with hash " << hash << '\n';
+}
+
+std::string MiniGitSystem::getCurrentTime() {
+    std::time_t now = std::time(nullptr);
+    char buf[64];
+    std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", std::localtime(&now));
+    return std::string(buf);
+}
+
+std::string MiniGitSystem::generateCommitHash(const std::string& message, const std::string& time) {
+    std::hash<std::string> hasher;
+    return std::to_string(hasher(message + time));
+}
+
+void MiniGitSystem::commit(const std::string& message) {
+    if (stagingArea.empty()) {
+        std::cout << "Nothing to commit.\n";
+        return;
+    }
+
+    std::string time = getCurrentTime();
+    std::string commitHash = generateCommitHash(message, time);
+
+    Commit* newCommit = new Commit;
+    newCommit->message = message;
+    newCommit->timestamp = time;
+    newCommit->hash = commitHash;
+    newCommit->parent = head;
+
+    for (const auto& filename : stagingArea) {
+        Blob blob;
+        blob.filename = filename;
+        blob.hash = hashFile(filename);
+        newCommit->blobs.push_back(blob);
+    }
+
+    head = newCommit;
+
+    std::ofstream out(".minigit/commit_" + commitHash + ".txt");
+    out << "commit: " << commitHash << "\n";
+    out << "date: " << time << "\n";
+    out << "message: " << message << "\n";
+    for (const auto& blob : newCommit->blobs) {
+        out << "file: " << blob.filename << " hash: " << blob.hash << "\n";
+    }
+    out.close();
+
+    stagingArea.clear();
+
+    std::cout << " Commit created: " << commitHash << '\n';
 }
